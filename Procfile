@@ -1,1 +1,1 @@
-web: panel serve --address="0.0.0.0" --port=$PORT app.py --allow-websocket-origin=unify-dav-data-portrait.herokuapp.com
+web: panel serve --address="0.0.0.0" --port=$PORT app.py --allow-websocket-origin=unify-community-mosaic-test.herokuapp.com
