@@ -165,7 +165,7 @@ class DrawSVG(AutoStart):
         try:
             int_repeats = inter_func_dict[internal_func]
         except:
-            internal_func = None           
+            int_repeats = None           
 
         my_filename = name+'.svg'
         dwg = svgwrite.Drawing(my_filename, size=(400, 400), profile='full')
@@ -218,7 +218,7 @@ class DrawSVG(AutoStart):
             dwg.add(dwg.path(d="M"+str(c_out[i])+" 260"+s_path, style="stroke:#143250;stroke-width:2; fill-opacity:0"))
 
         #draw internal function repeats
-        if internal_func!="No":
+        if int_repeats:
             s_path = " l 10,-17.5 q10,1 20,0 q2.5,6 10,17.5 q-3.5,8 -10,17.5 q-7.5,-1 -20,0 q-2.5,-7.5 -10,-17.5"
             for i in range(int_repeats):       
                 dwg.add(dwg.path(d="M"+str(c_out[i])+" 100"+s_path, style="stroke:#143250;stroke-width:2; fill-opacity:0", transform="rotate(10 "+str(c_out[i])+" 100)"))
