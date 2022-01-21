@@ -4,7 +4,7 @@ from panel.template.base import _base_config
 import svgwrite
 import os
 
-pn.extension()
+pn.extension(sizing_mode='stretch_width')
 
 live_dict = {"Seattle": "#1DC2BB",
                "San Francisco": "#143250",
@@ -229,9 +229,12 @@ class DrawSVG(AutoStart):
         paragraph = dwg.add(dwg.g(class_="amatic45", ))
         paragraph.add(dwg.text(name, insert=(100,215), style="fill:#FFFFFF", textLength="200", lengthAdjust="spacingAndGlyphs"))
         dwg.save(pretty=True)    
-        download_button = pn.widgets.FileDownload(file=my_filename)
+        download_button = pn.widgets.FileDownload(file=my_filename, sizing_mode='scale_width', max_width=400, align='center')
         
-        return pn.Column(pn.pane.SVG(my_filename, width=400, height=400), download_button)
+        return pn.Column(pn.pane.SVG(my_filename, width=400, height=400, align='center'), download_button, \
+                      pn.layout.VSpacer(),\
+                      pn.pane.Markdown(""" #### Decode your mosaic tile""", align='center'), \
+                      pn.pane.PNG('assets/mosaic_tile_decoder.png', sizing_mode="scale_width", max_width=700, align='center'))
 
 pipeline = pn.pipeline.Pipeline(ready_parameter='ready', debug=True)
 pipeline.add_stage('Who are you?', AutoStart,  next_parameter='selected')
@@ -245,15 +248,17 @@ pipeline.define_graph({'Who are you?':("I consult with clients", "I have an inte
                        "I have an internal role":'DrawSVG',
                        "I consult AND have an internal role":'DrawSVG'})
 
-layout = pn.Column(pn.pane.Markdown(""" ### Tell us about yourself, Newnifier!"""), \
+layout = pn.Column(pn.pane.Markdown(""" ### Tell us about yourself!""", sizing_mode="stretch_width"), \
                    pipeline.stage, pn.layout.VSpacer(), pn.layout.VSpacer(),\
-                   pn.Row(pipeline.prev_button, pn.layout.HSpacer(), pipeline.next_button),)
+                   pn.Row(pipeline.prev_button, pn.layout.HSpacer(), pipeline.next_button),align='center')
 
 pn.template.FastListTemplate(
     title='Unify Community Mosaic', header_background="#143250", theme_toggle=False,
     main = ["Welcome to Unify Onboarding! We're excited that you've joined our firm. To get to know you a bit better, generate your own data mosaic tile below.",
             layout
            ], 
-            main_max_width='1200px',
-            sizing_mode="stretch_both", 
+            main_max_width='1000px',
+            sizing_mode="stretch_width", 
+            logo="assets/unify_logo.png",
+            favicon= "assets/favicon-32x32.png",
             accent_base_color="#1DC2BB").servable();
