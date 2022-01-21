@@ -1,27 +1,10 @@
 import param 
 import panel as pn
+from panel.template.base import _base_config
 import svgwrite
 import os
 
-css1 = '''
-.bk.panel-button-group {
-    background-color: #EDEDED; 
-    border-color: #E0E0E0;
-    }
-.bk.panel-button-group:active {
-    background-color:#BBECEA;
-    border-color: #1DC2BB;
-}
-'''
-
-css= '''
-.bk-root .bk-input-group{{
-    --accent-fill-hover: {#BBECEA};
-    --accent-fill-active: {#BBECEA};
-}}'''
-
-
-pn.extension(raw_css=[css])
+pn.extension()
 
 live_dict = {"Seattle": "#1DC2BB",
                "San Francisco": "#143250",
@@ -31,11 +14,12 @@ live_dict = {"Seattle": "#1DC2BB",
                "Dallas": "#B72A33",
                "Dakotas": "#FCED1E"}
 role_dict = {"Seattle": "#1DC2BB",
-               "San Francisco": "#143250",
-               "Silicon Valley": "#FF9233",
-               "Chicago": "#C0D461",
-               "Dallas": "#B72A33",
-               "National": "#FCED1E"}
+             "San Francisco": "#143250",
+             "Silicon Valley": "#2966A3",
+             "Chicago": "#C0D461",
+             "Dallas": "#B72A33",
+             "National": "#FCED1E", 
+             "Between engagements": "#83ECE7"}
 service_line_dict = {"Data Analysis & Visualization": ["DDI",1],
                 "Data Science": ["DDI",2],
                 "Data Engineering & Cloud Services": ["DDI",3],
@@ -63,7 +47,20 @@ inter_func_dict = {"People Team":1,
                    "Operations":4,
                    "Finance": 5,
                    "Brand/Marketing":6 ,
-                   "Service Line/Industry Leader": 7 }
+                   "Service Line/Industry Leader": 7,
+                   "Practice Leadership": 8, 
+                   "Account Leadership": 9,
+                   "Industry Leadership": 10, 
+                   "Advocacy":11}
+industry_dict = {"None": "",
+                 "Healthcare & Life Sciences": "2", 
+                 "Energy & Utilities": "6",
+                 "Telecommunications": "2 4 6 4", 
+                 "Nonprofit": "2 2 2 2 6 2",
+                 "High-Tech": "12 4",
+                 "Financial Services": "4 8", 
+                 "Product": "4 4 8 4", 
+                 "Retail": "2 6"}
 role_options = ['I consult with clients', 'I have an internal role', 'I consult AND have an internal role']
 
 class AutoStart(param.Parameterized):
@@ -73,16 +70,19 @@ class AutoStart(param.Parameterized):
 
     def panel(self):
         return pn.Column(pn.widgets.TextInput.from_param(self.param.name_input), pn.layout.VSpacer(), \
-                         "I live in", pn.widgets.RadioButtonGroup.from_param(self.param.market_input, css_classes=['bk-input-group']), pn.layout.VSpacer(), \
-                         "At Unify,", pn.widgets.RadioButtonGroup.from_param(self.param.selected))
-   
+                         "I live in", pn.widgets.RadioButtonGroup.from_param(self.param.market_input, button_type="success"), pn.layout.VSpacer(), \
+                         "At Unify,", pn.widgets.RadioButtonGroup.from_param(self.param.selected, button_type="success"))
+
 class ConsultantQuestions(AutoStart):
     client_input = param.Selector(objects=list(role_dict.keys()))
     practice_input = param.Selector(objects=list(service_line_dict.keys()))
+    industry_input = param.Selector( objects=list(industry_dict.keys())[:3])
     
     def panel(self):
-        return pn.Column("My client work is in", pn.widgets.RadioButtonGroup.from_param(self.param.client_input), pn.layout.VSpacer(), \
-                         "My primary practice is", pn.widgets.Select.from_param(self.param.practice_input, name=""))
+        return pn.Column("My client work is in", pn.widgets.RadioButtonGroup.from_param(self.param.client_input, button_type="success"), pn.layout.VSpacer(), \
+                         "My primary practice is", pn.widgets.Select.from_param(self.param.practice_input, name=""), pn.layout.VSpacer(), \
+                         "My industry vertical is", pn.widgets.RadioButtonGroup.from_param(self.param.industry_input, button_type="success"))
+                         
     
     @param.output('result')
     def output(self):
@@ -90,18 +90,19 @@ class ConsultantQuestions(AutoStart):
                        "live_input": self.market_input,
                        "client_market": self.client_input,
                        "practice_input": self.practice_input,
+                       "industry_input": self.industry_input, 
                        "internal_role_input": "",
                        "internal_market_input": "", 
                        "internal_func_input": ""}
         return consult_dict
 
 class InternalQuestions(AutoStart):
-    internal_func_input = param.Selector(objects=list(inter_func_dict.keys()))
-    internal_market_input = param.Selector(objects=list(role_dict.keys()))
+    internal_func_input = param.Selector(objects=list(inter_func_dict.keys())[:7])
+    internal_market_input = param.Selector(objects=list(role_dict.keys())[:-1])
    
     def panel(self):    
-        return pn.Column("My main function is", pn.widgets.Select.from_param(self.param.internal_func_input), pn.layout.VSpacer(), \
-                         "I support: ", pn.widgets.RadioButtonGroup.from_param(self.param.internal_market_input))
+        return pn.Column("My main function is", pn.widgets.Select.from_param(self.param.internal_func_input,name=""), pn.layout.VSpacer(), \
+                         "I support: ", pn.widgets.RadioButtonGroup.from_param(self.param.internal_market_input, button_type="success"))
     
     @param.output('result')
     def output(self):
@@ -109,6 +110,7 @@ class InternalQuestions(AutoStart):
                        "live_input": self.market_input,
                        "client_market": "",
                        "practice_input": "",
+                       "industry_input": "None", 
                        "internal_role_input": "",
                        "internal_market_input": self.internal_market_input, 
                        "internal_func_input": self.internal_func_input}
@@ -117,14 +119,18 @@ class InternalQuestions(AutoStart):
 class HybridQuestions(AutoStart):
     client_input = param.Selector(objects=list(role_dict.keys()))
     practice_input = param.Selector(objects=list(service_line_dict.keys()))
-    hybrid_role_input = param.Selector(objects=['Practice Leadership', 'Account Leadership', 'Industry Leadership', 'Advocacy'])
-    internal_market_input = param.Selector(objects=list(role_dict.keys()))
+    industry_input = param.Selector(objects= list(industry_dict.keys())[:3])
+    internal_func_input = param.Selector(objects=["No"]+list(inter_func_dict.keys())[:7])
+    hybrid_role_input = param.ListSelector(objects=list(inter_func_dict.keys())[7:])
+    internal_market_input = param.Selector(objects=list(role_dict.keys())[:-1])
     
     def panel(self): 
-        return pn.Column("My client work is in", pn.widgets.RadioButtonGroup.from_param(self.param.client_input), pn.layout.VSpacer(), \
+        return pn.Column("My client work is in", pn.widgets.RadioButtonGroup.from_param(self.param.client_input, button_type="success"), pn.layout.VSpacer(), \
                          "My primary practice is", pn.widgets.Select.from_param(self.param.practice_input, name=""), pn.layout.VSpacer(), \
-                         "I mainly serve in ", pn.widgets.RadioButtonGroup.from_param(self.param.hybrid_role_input), pn.layout.VSpacer(), \
-                         "I support ", pn.widgets.RadioButtonGroup.from_param(self.param.internal_market_input))
+                         "My industry vertical is", pn.widgets.RadioButtonGroup.from_param(self.param.industry_input, button_type="success"), pn.layout.VSpacer(),\
+                         "Do you work on an internal function?", pn.widgets.Select.from_param(self.param.internal_func_input, name=""), pn.layout.VSpacer(),
+                         "I serve in ", pn.widgets.CheckButtonGroup.from_param(self.param.hybrid_role_input, button_type="success"), pn.layout.VSpacer(), \
+                         "My internal role supports ", pn.widgets.RadioButtonGroup.from_param(self.param.internal_market_input, button_type="success"))
     
     @param.output('result')
     def output(self):
@@ -132,19 +138,11 @@ class HybridQuestions(AutoStart):
                        "live_input": self.market_input,
                        "client_market": self.client_input,
                        "practice_input": self.practice_input,
+                       "industry_input": self.industry_input, 
                        "internal_role_input": self.hybrid_role_input,
                        "internal_market_input": self.internal_market_input, 
-                       "internal_func_input": "" }
+                       "internal_func_input": self.internal_func_input }
         return hybrid_dict
-
-class DrawSVG1(AutoStart):
-    result = param.Dict()
-    
-    def panel(self):
-        name = self.result['name_input']
-        client_market_val = self.result['client_market']
-        #client_col = role_dict['client_market]
-        return pn.Column(client_market_val)
     
 class DrawSVG(AutoStart):
     result = param.Dict()
@@ -155,6 +153,7 @@ class DrawSVG(AutoStart):
         live_market = self.result['live_input']
         client_market = self.result['client_market']
         practice = self.result['practice_input']
+        industry = self.result['industry_input']
         internal_market = self.result['internal_market_input']
         internal_role = self.result['internal_role_input']
         internal_func = self.result['internal_func_input']
@@ -178,48 +177,51 @@ class DrawSVG(AutoStart):
             dwg.add(dwg.path(d="M16,200 q124,-60 184,-184 q60,124 184,184 q-124,60 -184,184 q-60,-124 -184,-184 Z", style="fill:"+role_dict[client_market]+";fill-opacity:0.6"))
 
         #internal role glyph
-        if internal_role=="Practice Leadership":
-            int_str_col = "#45E3DB"
-        elif internal_role == "Account Leadership":
-            int_str_col == "#FF9233"
-        elif internal_role == "Industry Leadership":
-            int_str_col = "#FCEF39"
-        elif internal_role=="Advocacy":
-            int_str_col = "#D1333E"
-        else:
-            int_str_col = "#FFFFFF"
-
+        if internal_role or internal_func:
+            dwg.add(dwg.path(d="M16,200 q124,-60 184,-184 q60,124 184,184 q-124,60 -184,184 q-60,-124 -184,-184 Z", 
+                         style="fill:"+role_dict[internal_market]+";fill-opacity:0.6", transform="rotate(45 200 200)"))
+        
+        #hybrid role glyphs
         if internal_role:
-            dwg.add(dwg.path(d="M16,200 q124,-60 184,-184 q60,124 184,184 q-124,60 -184,184 q-60,-124 -184,-184 Z", \
-                             style="fill:"+role_dict[internal_market]+";fill-opacity:0.6;stroke:"+int_str_col, \
-                             transform="rotate(45 200 200)"))
+            fill_op_list = [0.0, 0.0, 0.0, 0.0]
+            if "Practice Leadership" in internal_role: 
+                fill_op_list[0] = 1.0
+            if "Account Leadership" in internal_role:
+                fill_op_list[1] = 1.0 
+            if "Industry Leadership" in internal_role:
+                fill_op_list[2] = 1.0 
+            if "Advocacy" in internal_role:
+                fill_op_list[3] = 1.0 
+
+            for i in range(4):
+                dwg.add(dwg.circle(center=(162.5+(i*25) ,150), r=10, style="fill:#143250; fill-opacity:"+str(fill_op_list[i])+";stroke:#143250;stroke-width:2"))
+
+        if industry!="None" :
+            dwg.add(dwg.line(start=(100,170), end=(300, 170), style="stroke:#143250;stroke-width:2;stroke-dasharray:"+str(industry_dict[industry])))
+            dwg.add(dwg.line(start=(100,228), end=(300, 228), style="stroke:#143250;stroke-width:2;stroke-dasharray:"+str(industry_dict[industry])))
+
+        #sequence for drawing center-out
+        c_out = [178, 160, 196, 142, 214, 124, 232, 106, 250]
 
         # get the shape path for service line
         if service_line=="DDI":
-            s_path = " a40,40 0 0,1 80,0  a42,41 0 0,1 -40,40 a39,35 0 0,1 -38,-42"
+            s_path = " a20,20 0 0,1 40,0  a21,20.5 0 0,1 -20,20 a19.5,17.5 0 0,1 -19,-21"
         elif service_line == "BA":
-            s_path = " q10,-15 40,-40 q40,35 40,40 q-25,35 -40,40 q-15,-20 -40,-40 Z"
+            s_path = " q5,-7.5 20,-20 q20,17.5 20,20 q-12.5,17.5 -20,20 q-7.5,-10 -20,-20 Z"
         elif service_line == "TE":
-            s_path = " m0,40 q35,-60 40,-80 q10,12 40,80 q-20,3 -40,0 q-24,-4 -40,0 Z"
+            s_path = " m0,20 q17.5,-30 20,-40 q5,6 20,40 q-10,1.5 -20,0 q-12,-2 -20,0 Z"
         else:
             s_path=""
 
         #draw service line repeats
-        if service_line:
-            for i in range(sl_repeats):
-                if i<5:
-                    path = "M"+str(50+(i*27.5))+" "+str(260+(i*20))
-                else: 
-                    path = "M"+str(50+(i*27.5))+" "+str(340-((i-4)*20))
-                dwg.add(dwg.path(d=path+s_path, style="stroke:#143250;stroke-width:2; fill-opacity:0"))
-
+        for i in range(sl_repeats):
+            dwg.add(dwg.path(d="M"+str(c_out[i])+" 260"+s_path, style="stroke:#143250;stroke-width:2; fill-opacity:0"))
 
         #draw internal function repeats
-        if internal_func:
-            s_path = " l 20,-35 q20,2 40,0 q5,12 20,35 q-7,16 -20,35 q-15,-2 -40,0 q-5,-15 -20,-35"
+        if internal_func!="No":
+            s_path = " l 10,-17.5 q10,1 20,0 q2.5,6 10,17.5 q-3.5,8 -10,17.5 q-7.5,-1 -20,0 q-2.5,-7.5 -10,-17.5"
             for i in range(int_repeats):       
-                path = "M"+str(60+(i*35))+" 100"
-                dwg.add(dwg.path(d=path+s_path, style="stroke:#143250;stroke-width:2; fill-opacity:0", transform="rotate(10 "+str(100+(i*35))+" 100)"))
+                dwg.add(dwg.path(d="M"+str(c_out[i])+" 100"+s_path, style="stroke:#143250;stroke-width:2; fill-opacity:0", transform="rotate(10 "+str(c_out[i])+" 100)"))
 
         #Get google font and define for use
         dwg.embed_google_web_font(name="Amatic SC", uri='https://fonts.googleapis.com/css2?family=Amatic+SC')
@@ -230,9 +232,6 @@ class DrawSVG(AutoStart):
         download_button = pn.widgets.FileDownload(file=my_filename)
         
         return pn.Column(pn.pane.SVG(my_filename, width=400, height=400), download_button)
-
-        
-        #return pn.Column(self.result.keys())
 
 pipeline = pn.pipeline.Pipeline(ready_parameter='ready', debug=True)
 pipeline.add_stage('Who are you?', AutoStart,  next_parameter='selected')
@@ -246,8 +245,6 @@ pipeline.define_graph({'Who are you?':("I consult with clients", "I have an inte
                        "I have an internal role":'DrawSVG',
                        "I consult AND have an internal role":'DrawSVG'})
 
-
-
 layout = pn.Column(pn.pane.Markdown(""" ### Tell us about yourself, Newnifier!"""), \
                    pipeline.stage, pn.layout.VSpacer(), pn.layout.VSpacer(),\
                    pn.Row(pipeline.prev_button, pn.layout.HSpacer(), pipeline.next_button),)
@@ -255,6 +252,8 @@ layout = pn.Column(pn.pane.Markdown(""" ### Tell us about yourself, Newnifier!""
 pn.template.FastListTemplate(
     title='Unify Community Mosaic', header_background="#143250", theme_toggle=False,
     main = ["Welcome to Unify Onboarding! We're excited that you've joined our firm. To get to know you a bit better, generate your own data mosaic tile below.",
-            layout,
-           ],main_max_width='1200px',
+            layout
+           ], 
+            main_max_width='1200px',
+            sizing_mode="stretch_both", 
             accent_base_color="#1DC2BB").servable();
