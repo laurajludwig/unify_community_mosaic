@@ -2,6 +2,7 @@ import param
 import panel as pn
 from panel.template.base import _base_config
 import svgwrite
+import cairosvg
 import os
 
 pn.extension(sizing_mode='stretch_width')
@@ -56,7 +57,7 @@ inter_func_dict = {"People Team":1,
                    "Industry Director": 10, 
                    "Industry Manager": 10, 
                    "Advocate Director":11}
-industry_dict = {"None": "",
+industry_dict = {"Neither": "",
                  "Healthcare & Life Sciences": "2", 
                  "Energy & Utilities": "6",
                  "Telecommunications": "2 4 6 4", 
@@ -65,17 +66,18 @@ industry_dict = {"None": "",
                  "Financial Services": "4 8", 
                  "Product": "4 4 8 4", 
                  "Retail": "2 6"}
-role_options = ['I consult with clients', 'I have an internal role', 'I consult AND have an internal role']
+role_options = ['I consult with clients ONLY', 'I have an internal role ONLY', 'I consult AND have an internal role']
 
 class AutoStart(param.Parameterized):
-    name_input = param.String(label= "My name is")
+    name_input = param.String(label= "My name is (first and last)")
     market_input = param.Selector(label="I live in", objects=list(live_dict.keys()))
     selected = param.Selector(objects=role_options)
 
     def panel(self):
         return pn.Column(pn.widgets.TextInput.from_param(self.param.name_input), pn.layout.VSpacer(), \
-                         "I live in", pn.widgets.RadioButtonGroup.from_param(self.param.market_input, button_type="success"), pn.layout.VSpacer(), \
-                         "At Unify,", pn.widgets.RadioButtonGroup.from_param(self.param.selected, button_type="success"))
+                         "I live in", pn.Row(pn.widgets.RadioButtonGroup.from_param(self.param.market_input, button_type="success"), max_width=600, align='center'), pn.layout.Divider(), \
+                         "Some Unifiers consult with their clients. Other Unifiers are internal and support our consultants (e.g., finance , operations, and people team). Then there are Unifiers who are hybrids and both consult as well as help shape the business (i.e., via leadership on practices, accounts, industries, or in an advocate role).",\
+                         "Which one are you?", pn.Row(pn.widgets.RadioButtonGroup.from_param(self.param.selected, button_type="success"), max_width=600, align='center'))
 
 class ConsultantQuestions(AutoStart):
     client_input = param.Selector(objects=list(role_dict.keys())[:-2]+['Between engagements'])
@@ -83,9 +85,9 @@ class ConsultantQuestions(AutoStart):
     industry_input = param.Selector( objects=list(industry_dict.keys())[:3])
     
     def panel(self):
-        return pn.Column("My client work is in", pn.widgets.RadioButtonGroup.from_param(self.param.client_input, button_type="success"), pn.layout.VSpacer(), \
-                         "My primary practice is", pn.widgets.Select.from_param(self.param.practice_input, name=""), pn.layout.VSpacer(), \
-                         "If you specialize in one of our industry verticals, which one?", pn.widgets.RadioButtonGroup.from_param(self.param.industry_input, button_type="success"))
+        return pn.Column("My client work is in", pn.Row(pn.widgets.RadioButtonGroup.from_param(self.param.client_input, button_type="success"), max_width=600, align='center'), pn.layout.VSpacer(), \
+                         "My primary practice is", pn.Row(pn.widgets.Select.from_param(self.param.practice_input, name=""),max_width=400, align='center'), pn.layout.VSpacer(), \
+                         "If you specialize in one of our industry verticals, which one?", pn.Row(pn.widgets.RadioButtonGroup.from_param(self.param.industry_input, button_type="success"), max_width=400, align='center'))
                          
     
     @param.output('result')
@@ -105,8 +107,8 @@ class InternalQuestions(AutoStart):
     internal_market_input = param.Selector(objects=list(role_dict.keys())[:-1])
    
     def panel(self):    
-        return pn.Column("As an internal Unifier, which internal function do you work on?", pn.widgets.Select.from_param(self.param.internal_func_input,name=""), pn.layout.VSpacer(), \
-                         "I support ", pn.widgets.RadioButtonGroup.from_param(self.param.internal_market_input, button_type="success"))
+        return pn.Column("As an internal Unifier, which internal function are you part of?", pn.Row(pn.widgets.Select.from_param(self.param.internal_func_input,name=""), max_width=600, align='center'), pn.layout.VSpacer(), \
+                         "I support ", pn.Row(pn.widgets.RadioButtonGroup.from_param(self.param.internal_market_input, button_type="success"), max_width=600, align='center'))
     
     @param.output('result')
     def output(self):
@@ -114,7 +116,7 @@ class InternalQuestions(AutoStart):
                        "live_input": self.market_input,
                        "client_market": "",
                        "practice_input": "",
-                       "industry_input": "None", 
+                       "industry_input": "Neither", 
                        "internal_role_input": "",
                        "internal_market_input": self.internal_market_input, 
                        "internal_func_input": self.internal_func_input}
@@ -129,12 +131,12 @@ class HybridQuestions(AutoStart):
     internal_market_input = param.Selector(objects=list(role_dict.keys())[:-1])
     
     def panel(self): 
-        return pn.Column("My client work is in", pn.widgets.RadioButtonGroup.from_param(self.param.client_input, button_type="success"), pn.layout.VSpacer(), \
-                         "My primary practice is", pn.widgets.Select.from_param(self.param.practice_input, name=""), pn.layout.VSpacer(), \
-                         "If you specialize in one of our industry verticals, which one?", pn.widgets.RadioButtonGroup.from_param(self.param.industry_input, button_type="success"), pn.layout.VSpacer(),\
-                         "As an internal Unifier, which internal function do you work on?", pn.widgets.Select.from_param(self.param.internal_func_input, name=""), pn.layout.VSpacer(),
-                         "As a consultant, I am also a ", pn.widgets.CheckButtonGroup.from_param(self.param.hybrid_role_input, button_type="success"), pn.layout.VSpacer(), \
-                         "My internal role supports ", pn.widgets.RadioButtonGroup.from_param(self.param.internal_market_input, button_type="success"))
+        return pn.Column("My client work is in", pn.Row(pn.widgets.RadioButtonGroup.from_param(self.param.client_input, button_type="success"), max_width=600, align='center'), pn.layout.VSpacer(), \
+                         "My primary practice is", pn.Row(pn.widgets.Select.from_param(self.param.practice_input, name=""), max_width=600, align='center'), pn.layout.VSpacer(), \
+                         "If you specialize in one of our industry verticals, which one?", pn.Row(pn.widgets.RadioButtonGroup.from_param(self.param.industry_input, button_type="success"), max_width=400, align='center'), pn.layout.Divider(),\
+                        "As an internal Unifier, which internal function are you part of?", pn.Row(pn.widgets.Select.from_param(self.param.internal_func_input, name=""), max_width=600, align='center'),
+                        "As a consultant, I am also a ", pn.Row(pn.widgets.CheckButtonGroup.from_param(self.param.hybrid_role_input, button_type="success"),  align='center'),
+                        "My internal role supports ", pn.Row(pn.widgets.RadioButtonGroup.from_param(self.param.internal_market_input, button_type="success"), max_width=600, align='center'))
     
     @param.output('result')
     def output(self):
@@ -171,8 +173,8 @@ class DrawSVG(AutoStart):
         except:
             int_repeats = None           
 
-        my_filename = name+'.svg'
-        dwg = svgwrite.Drawing(my_filename, size=(400, 400), profile='full')
+        my_filename = name+'.png'
+        dwg = svgwrite.Drawing(size=(400, 400), profile='full')
         dwg.add(dwg.rect(insert=(0,0), size=(400,400), fill=live_dict[live_market]))
         dwg.add(dwg.circle(center=(200,200), r=190, fill="#FFFFFF"))
 
@@ -200,7 +202,7 @@ class DrawSVG(AutoStart):
             for i in range(4):
                 dwg.add(dwg.circle(center=(162.5+(i*25) ,150), r=10, style="fill:#143250; fill-opacity:"+str(fill_op_list[i])+";stroke:#143250;stroke-width:2"))
 
-        if industry!="None" :
+        if industry!="Neither" :
             dwg.add(dwg.line(start=(100,170), end=(300, 170), style="stroke:#143250;stroke-width:2;stroke-dasharray:"+str(industry_dict[industry])))
             dwg.add(dwg.line(start=(100,228), end=(300, 228), style="stroke:#143250;stroke-width:2;stroke-dasharray:"+str(industry_dict[industry])))
 
@@ -231,25 +233,25 @@ class DrawSVG(AutoStart):
         dwg.embed_google_web_font(name="Amatic SC", uri='https://fonts.googleapis.com/css2?family=Amatic+SC')
         dwg.embed_stylesheet(""".amatic45 {font: 45px "Amatic SC"}""")
         paragraph = dwg.add(dwg.g(class_="amatic45", ))
-        paragraph.add(dwg.text(name, insert=(100,215), style="fill:#FFFFFF", textLength="200", lengthAdjust="spacingAndGlyphs"))
-        dwg.save(pretty=True)    
+        paragraph.add(dwg.text(name, insert=(200,200), text_anchor='middle', dominant_baseline='middle', style="fill:#FFFFFF" )) 
+        cairosvg.svg2png(dwg.tostring(), write_to=my_filename)
         download_button = pn.widgets.FileDownload(file=my_filename, sizing_mode='scale_width', max_width=400, align='center')
         
-        return pn.Column(pn.pane.SVG(my_filename, width=400, height=400, align='center'), download_button, \
+        return pn.Column(pn.pane.PNG(my_filename, width=400, height=400, align='center'), download_button, \
                       pn.layout.VSpacer(),\
                       pn.pane.Markdown(""" #### Decode your mosaic tile""", align='center'), \
                       pn.pane.PNG('assets/mosaic_tile_decoder.png', sizing_mode="scale_width", max_width=700, align='center'))
 
 pipeline = pn.pipeline.Pipeline(ready_parameter='ready', debug=True)
 pipeline.add_stage('Who are you?', AutoStart,  next_parameter='selected')
-pipeline.add_stage("I consult with clients", ConsultantQuestions)
-pipeline.add_stage("I have an internal role", InternalQuestions)
+pipeline.add_stage("I consult with clients ONLY", ConsultantQuestions)
+pipeline.add_stage("I have an internal role ONLY", InternalQuestions)
 pipeline.add_stage("I consult AND have an internal role", HybridQuestions)
 pipeline.add_stage("DrawSVG", DrawSVG)
 
-pipeline.define_graph({'Who are you?':("I consult with clients", "I have an internal role", "I consult AND have an internal role"), 
-                       "I consult with clients":'DrawSVG', 
-                       "I have an internal role":'DrawSVG',
+pipeline.define_graph({'Who are you?':("I consult with clients ONLY", "I have an internal role ONLY", "I consult AND have an internal role"), 
+                       "I consult with clients ONLY":'DrawSVG', 
+                       "I have an internal role ONLY":'DrawSVG',
                        "I consult AND have an internal role":'DrawSVG'})
 
 layout = pn.Column(pn.pane.Markdown(""" ### Tell us about yourself!""", sizing_mode="stretch_width"), \
