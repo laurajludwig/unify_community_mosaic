@@ -6,7 +6,7 @@ import cairosvg
 import os
 
 pn.extension(sizing_mode='stretch_width')
-css="""@import url("//fonts.googleapis.com/css?family=Amatic+SC")"""
+css="""@import url("https://fonts.googleapis.com/css?family=Amatic+SC")"""
 config=_base_config(raw_css=[css])
 
 live_dict = {"Seattle": "#1DC2BB",
