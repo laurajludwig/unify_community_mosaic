@@ -232,11 +232,11 @@ class DrawSVG(AutoStart):
                 dwg.add(dwg.path(d="M"+str(c_out[i])+" 100"+s_path, style="stroke:#143250;stroke-width:2; fill-opacity:0", transform="rotate(10 "+str(c_out[i])+" 100)"))
 
         #Get google font and define for use
-        #dwg.defs.add(dwg.style('@import url("//fonts.googleapis.com/css2?family=Amatic+SC"'))
-        dwg.embed_google_web_font(name="Amatic SC", uri='https://fonts.googleapis.com/css2?family=Amatic+SC')
-        dwg.embed_stylesheet(""".amatic45 {font: 45px "Amatic SC"}""")
-        paragraph = dwg.add(dwg.g(class_="amatic45", ))
-        paragraph.add(dwg.text(name, insert=(200,200), text_anchor='middle', dominant_baseline='middle', font_family='Amatic SC', font_size=45, style="fill:#FFFFFF" )) 
+        dwg.defs.add(dwg.style('@import url("//fonts.googleapis.com/css2?family=Amatic+SC"'))
+        #dwg.embed_google_web_font(name="Amatic SC", uri='https://fonts.googleapis.com/css2?family=Amatic+SC')
+        #dwg.embed_stylesheet(""".amatic45 {font: 45px "Amatic SC"}""")
+        #paragraph = dwg.add(dwg.g(class_="amatic45", ))
+        dwg.add(dwg.text(name, insert=(200,200), text_anchor='middle', dominant_baseline='middle', font_family='Amatic SC', font_size=45, style="fill:#FFFFFF" )) 
         cairosvg.svg2png(dwg.tostring(), write_to=my_filename)
         download_button = pn.widgets.FileDownload(file=my_filename, sizing_mode='scale_width', max_width=400, align='center')
         
