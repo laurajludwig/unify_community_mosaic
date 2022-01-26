@@ -232,7 +232,7 @@ class DrawSVG(AutoStart):
                 dwg.add(dwg.path(d="M"+str(c_out[i])+" 100"+s_path, style="stroke:#143250;stroke-width:2; fill-opacity:0", transform="rotate(10 "+str(c_out[i])+" 100)"))
 
         #Get google font and define for use
-        dwg.defs.add(dwg.style('@import url("https://fonts.googleapis.com/css2?family=Amatic+SC"'))
+        dwg.defs.add(dwg.style('@import url("https://fonts.googleapis.com/css2?family=Amatic+SC&display=swap"'))
         #dwg.embed_google_web_font(name="Amatic SC", uri='https://fonts.googleapis.com/css2?family=Amatic+SC')
         #dwg.embed_stylesheet(""".amatic45 {font: 45px "Amatic SC"}""")
         #paragraph = dwg.add(dwg.g(class_="amatic45", ))
