@@ -6,6 +6,8 @@ import cairosvg
 import os
 
 pn.extension(sizing_mode='stretch_width')
+css="""@import url("https://fonts.googleapis.com/css?family=Amatic+SC")"""
+config=_base_config(raw_css=[css])
 
 live_dict = {"Seattle": "#1DC2BB",
                "San Francisco": "#143250",
@@ -268,4 +270,5 @@ pn.template.FastListTemplate(
             sizing_mode="stretch_width", 
             logo="assets/unify_logo.png",
             favicon= "assets/favicon-32x32.png",
-            accent_base_color="#1DC2BB").servable();
+            accent_base_color="#1DC2BB",
+            config=config).servable();
