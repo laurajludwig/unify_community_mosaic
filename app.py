@@ -2,10 +2,12 @@ import param
 import panel as pn
 from panel.template.base import _base_config
 import svgwrite
-import cairosvg
+import cloudconvert
 import os
 
 pn.extension(sizing_mode='stretch_width')
+#cloudconvert.configure(api_key = API_KEY, sandbox = False)
+cloudconvert.default()
 
 live_dict = {"Seattle": "#1DC2BB",
                "San Francisco": "#143250",
@@ -173,8 +175,8 @@ class DrawSVG(AutoStart):
         except:
             int_repeats = None           
 
-        my_filename = name+'.png'
-        dwg = svgwrite.Drawing(size=(400, 400), profile='full')
+        my_filename = name+'.svg'
+        dwg = svgwrite.Drawing(my_filename, size=(400, 400), profile='full')
         dwg.add(dwg.rect(insert=(0,0), size=(400,400), fill=live_dict[live_market]))
         dwg.add(dwg.circle(center=(200,200), r=190, fill="#FFFFFF"))
 
@@ -234,10 +236,37 @@ class DrawSVG(AutoStart):
         dwg.embed_stylesheet(""".amatic45 {font: 45px "Amatic SC"}""")
         paragraph = dwg.add(dwg.g(class_="amatic45", ))
         paragraph.add(dwg.text(name, insert=(200,200), text_anchor='middle', dominant_baseline='middle', style="fill:#FFFFFF" )) 
-        cairosvg.svg2png(dwg.tostring(), write_to=my_filename)
-        download_button = pn.widgets.FileDownload(file=my_filename, sizing_mode='scale_width', max_width=400, align='center')
+        dwg.save(pretty=True)
         
-        return pn.Column(pn.pane.PNG(my_filename, width=400, height=400, align='center'), download_button, \
+        #send svg to cloud convert api to return png
+        upload_job = cloudconvert.Job.create(payload={
+            'tasks': {
+                'upload-my-file': {
+                    'operation': 'import/upload'
+                },
+                'convert-my-file': {
+                    'operation': 'convert',
+                    'input': 'upload-my-file',
+                    'input_format': 'svg',
+                    'output_format': 'png',
+                    'engine': 'inkscape',
+                    'pixel_density': 300
+                },
+                'export-png': {
+                    'operation': 'export/url',
+                    'input': 'convert-my-file'
+                }
+            }
+        })
+        
+        res = cloudconvert.Task.upload(file_name=my_filename, task=cloudconvert.Task.find(id=upload_job['tasks'][0]['id']))
+        resp = cloudconvert.Task.wait(id=upload_job['tasks'][2]['id'])
+        file = resp.get('result').get('files')[0]
+        download = cloudconvert.download(filename=file['filename'], url=file['url'])
+        png_filename = name+'.png'
+        download_button = pn.widgets.FileDownload(file=png_filename, sizing_mode='scale_width', max_width=400, align='center')
+        
+        return pn.Column(pn.pane.SVG(my_filename, width=400, height=400, align='center'), download_button, \
                       pn.layout.VSpacer(),\
                       pn.pane.Markdown(""" #### Decode your mosaic tile""", align='center'), \
                       pn.pane.PNG('assets/mosaic_tile_decoder.png', sizing_mode="scale_width", max_width=700, align='center'))
