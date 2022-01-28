@@ -6,8 +6,9 @@ import cloudconvert
 import os
 
 pn.extension(sizing_mode='stretch_width')
-#cloudconvert.configure(api_key = API_KEY, sandbox = False)
-cloudconvert.default()
+API_KEY = os.environ.get('CLOUDCONVERT_API_KEY')
+cloudconvert.configure(api_key = API_KEY, sandbox = False)
+#cloudconvert.default()
 
 live_dict = {"Seattle": "#1DC2BB",
                "San Francisco": "#143250",
