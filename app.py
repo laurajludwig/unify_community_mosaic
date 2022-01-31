@@ -8,7 +8,6 @@ import os
 pn.extension(sizing_mode='stretch_width')
 API_KEY = os.environ.get('CLOUDCONVERT_API_KEY')
 cloudconvert.configure(api_key = API_KEY, sandbox = False)
-#cloudconvert.default()
 
 live_dict = {"Seattle": "#1DC2BB",
                "San Francisco": "#143250",
@@ -198,8 +197,9 @@ class DrawSVG(AutoStart):
         elif time_type=="Night Owl":
             pattern = dwg.defs.add(dwg.pattern(insert=(0,0), size=(48, 64), patternUnits="userSpaceOnUse"))
             path ='M48 28 v-4 L36 12 24 24 12 12 0 24 v4 l4 4 -4 4 v4 l12 12 12 -12 12 12 12 -12 v-4 l -4 -4 4 -4z M8 32 l-6 -6 10 -10 10 10 -6 6 6 6 -10 10 L2 38 l6 -6z m12 0 l4 -4 4 4 -4 4 -4 -4z m12 0 l-6 -6 10 -10 10 10 -6 6 6 6 -10 10 -10 -10 6 -6z M0 16 L10 6 4 0 h4 l4 4 4 -4 h4 l-6 6 10 10 L34 6 l-6 -6 h4 l4 4 4 -4 h4 l-6 6 10 10 v4 L36 8 24 20 12 8 0 20 v-4z m0 32 l10 10 -6 6 h4l4 -4 4 4 h4 l-6 -6 10 -10 10 10 -6 6 h4 l4 -4 4 4 h4 l-6 -6 10 -10 v-4 L36 56 24 44 12 56 0 44 v4z'
-        pattern.add(dwg.path(d=path, style="fill:#FFFFFF; fill-opacity=0.8"))
+            pattern.add(dwg.path(d=path, style="fill:#FFFFFF; fill-opacity=0.8"))
         
+        dwg.add(dwg.rect(insert=(0,0), size=(400, 400), fill=pattern.get_paint_server()))
         dwg.add(dwg.circle(center=(200,200), r=190, fill="#FFFFFF"))
 
         #consulting glyph
@@ -286,7 +286,7 @@ class DrawSVG(AutoStart):
         file = resp.get('result').get('files')[0]
         download = cloudconvert.download(filename=file['filename'], url=file['url'])
         png_filename = name+'.png'
-        download_button = pn.widgets.FileDownload(file=png_filename, sizing_mode='scale_width', max_width=400, align='center')
+        download_button = pn.widgets.FileDownload(file=my_filename, sizing_mode='scale_width', max_width=400, align='center')
         
         return pn.Column(pn.pane.SVG(my_filename, width=400, height=400, align='center'), download_button, \
                       pn.layout.VSpacer(),\
