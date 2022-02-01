@@ -2,12 +2,12 @@ import param
 import panel as pn
 from panel.template.base import _base_config
 import svgwrite
-import cloudconvert
+#import cloudconvert
 import os
 
 pn.extension(sizing_mode='stretch_width')
-API_KEY = os.environ.get('CLOUDCONVERT_API_KEY')
-cloudconvert.configure(api_key = API_KEY, sandbox = False)
+#API_KEY = os.environ.get('CLOUDCONVERT_API_KEY')
+#cloudconvert.configure(api_key = API_KEY, sandbox = False)
 
 live_dict = {"Seattle": "#1DC2BB",
                "San Francisco": "#143250",
@@ -80,7 +80,7 @@ class AutoStart(param.Parameterized):
     def panel(self):
         return pn.Column(pn.widgets.TextInput.from_param(self.param.name_input), pn.layout.VSpacer(), \
                          "I live in", pn.Row(pn.widgets.RadioButtonGroup.from_param(self.param.market_input, button_type="success"), max_width=600, align='center'), pn.layout.VSpacer(), \
-                         "I am a", pn.Row(pn.widgets.RadioButtonGroup.from_param(self.param.time_type, button_type="success"), max_width=400, align='center'), pn.layout.Divider(), \
+                         "People work best at different times of day. Tell us when you do your best work. I am a", pn.Row(pn.widgets.RadioButtonGroup.from_param(self.param.time_type, button_type="success"), max_width=400, align='center'), pn.layout.Divider(), \
                          "Some Unifiers consult with their clients. Other Unifiers are internal and support our consultants (e.g., finance , operations, and people team). Then there are Unifiers who are hybrids and both consult as well as help shape the business (i.e., via leadership on practices, accounts, industries, or in an advocate role).",\
                          "Which one are you?", pn.Row(pn.widgets.RadioButtonGroup.from_param(self.param.selected, button_type="success"), max_width=600, align='center'))
 
@@ -257,41 +257,42 @@ class DrawSVG(AutoStart):
         dwg.embed_google_web_font(name="Amatic SC", uri='https://fonts.googleapis.com/css2?family=Amatic+SC')
         dwg.embed_stylesheet(""".amatic45 {font: 45px "Amatic SC"}""")
         paragraph = dwg.add(dwg.g(class_="amatic45", ))
-        paragraph.add(dwg.text(name, insert=(200,200), text_anchor='middle', dominant_baseline='middle', style="fill:#FFFFFF" )) 
+        paragraph.add(dwg.text(name, insert=(100,215), style="fill:#FFFFFF", textLength="200", lengthAdjust="spacingAndGlyphs")) 
         dwg.save(pretty=True)
         
         #send svg to cloud convert api to return png
-        upload_job = cloudconvert.Job.create(payload={
-            'tasks': {
-                'upload-my-file': {
-                    'operation': 'import/upload'
-                },
-                'convert-my-file': {
-                    'operation': 'convert',
-                    'input': 'upload-my-file',
-                    'input_format': 'svg',
-                    'output_format': 'png',
-                    'engine': 'inkscape',
-                    'pixel_density': 300
-                },
-                'export-png': {
-                    'operation': 'export/url',
-                    'input': 'convert-my-file'
-                }
-            }
-        })
+        #upload_job = cloudconvert.Job.create(payload={
+        #    'tasks': {
+        #        'upload-my-file': {
+        #            'operation': 'import/upload'
+        #        },
+        #        'convert-my-file': {
+        #            'operation': 'convert',
+        #            'input': 'upload-my-file',
+        #            'input_format': 'svg',
+        #            'output_format': 'png',
+        #            'engine': 'inkscape',
+        #            'pixel_density': 300
+        #        },
+        #        'export-png': {
+        #            'operation': 'export/url',
+        #            'input': 'convert-my-file'
+        #        }
+        #    }
+        #})
         
-        res = cloudconvert.Task.upload(file_name=my_filename, task=cloudconvert.Task.find(id=upload_job['tasks'][0]['id']))
-        resp = cloudconvert.Task.wait(id=upload_job['tasks'][2]['id'])
-        file = resp.get('result').get('files')[0]
-        download = cloudconvert.download(filename=file['filename'], url=file['url'])
-        png_filename = name+'.png'
-        download_button = pn.widgets.FileDownload(file=my_filename, sizing_mode='scale_width', max_width=400, align='center')
+        #res = cloudconvert.Task.upload(file_name=my_filename, task=cloudconvert.Task.find(id=upload_job['tasks'][0]['id']))
+        #resp = cloudconvert.Task.wait(id=upload_job['tasks'][2]['id'])
+        #file = resp.get('result').get('files')[0]
+        #download = cloudconvert.download(filename=file['filename'], url=file['url'])
+        #png_filename = name+'.png'
+        #download_button = pn.widgets.FileDownload(file=my_filename, sizing_mode='scale_width', max_width=400, align='center')
         
-        return pn.Column(pn.pane.SVG(my_filename, width=400, height=400, align='center'), download_button, \
-                      pn.layout.VSpacer(),\
-                      pn.pane.Markdown(""" #### Decode your mosaic tile""", align='center'), \
-                      pn.pane.PNG('assets/mosaic_tile_decoder.png', sizing_mode="scale_width", max_width=700, align='center'))
+        return pn.Column(pn.pane.Markdown("""#### Take a look at your unique profile tile!"""), 
+                         pn.pane.SVG(my_filename, width=400, height=400, align='center'), \
+                          pn.layout.Divider(),\
+                          pn.pane.Markdown(""" #### Decode your mosaic tile""", align='center'), \
+                          pn.pane.PNG('assets/mosaic_tile_decoder.png', sizing_mode="scale_width", max_width=700, align='center'))
 
 pipeline = pn.pipeline.Pipeline(ready_parameter='ready', debug=True)
 pipeline.add_stage('Who are you?', AutoStart,  next_parameter='selected')
