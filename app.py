@@ -232,7 +232,7 @@ class DrawSVG(AutoStart):
             dwg.add(dwg.line(start=(100,228), end=(300, 228), style="stroke:#143250;stroke-width:2;stroke-dasharray:"+str(industry_dict[industry])))
 
         #sequence for drawing center-out
-        c_out = [178, 160, 196, 142, 214, 124, 232, 106, 250]
+        c_out = [178, 160, 196, 142, 214, 124, 232, 106, 250, 88]
 
         # get the shape path for service line
         if service_line=="DDI":
