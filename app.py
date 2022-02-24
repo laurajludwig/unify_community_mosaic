@@ -43,7 +43,8 @@ service_line_dict = {"Data Analysis & Visualization": ["DDI",1],
                 "Technical Solution Delivery": ["TE",6],
                 "Enterprise Applications & Integration": ["TE",7],
                 "Applied AI & Cognitive Services": ["TE",8],
-                "Power Apps": ["TE",9]}
+                "Power Apps": ["TE",9],
+                "Security, Privacy & Compliance": ["TE", 10]}
 inter_func_dict = {"People Team":1, 
                    "Talent Acquisition":2,
                    "Business Development": 3,
@@ -254,10 +255,10 @@ class DrawSVG(AutoStart):
                 dwg.add(dwg.path(d="M"+str(c_out[i])+" 100"+s_path, style="stroke:#143250;stroke-width:2; fill-opacity:0", transform="rotate(10 "+str(c_out[i])+" 100)"))
 
         #Get google font and define for use
-        dwg.embed_google_web_font(name="Amatic SC", uri='https://fonts.googleapis.com/css2?family=Amatic+SC')
+        dwg.embed_google_web_font(name="Amatic SC", uri='https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700')
         dwg.embed_stylesheet(""".amatic45 {font: 45px "Amatic SC"}""")
         paragraph = dwg.add(dwg.g(class_="amatic45", ))
-        paragraph.add(dwg.text(name, insert=(100,215), style="fill:#FFFFFF", textLength="200", lengthAdjust="spacingAndGlyphs")) 
+        paragraph.add(dwg.text(name, insert=(100,215), style="fill:#FFFFFF;stroke:#000000;stroke-width:0.5", textLength="200", lengthAdjust="spacingAndGlyphs")) 
         dwg.save(pretty=True)
         
         #send svg to cloud convert api to return png
