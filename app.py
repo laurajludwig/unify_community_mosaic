@@ -16,12 +16,12 @@ live_dict = {"Seattle": "#1DC2BB",
                "Chicago": "#C0D461",
                "Dallas": "#B72A33",
                "Dakotas": "#6E5577"}
-role_dict = {"Seattle": "#1DC2BB",
+role_dict = {"National": "#FCED1E",
+             "Seattle": "#1DC2BB",
              "San Francisco": "#143250",
              "Silicon Valley": "#2966A3",
              "Chicago": "#C0D461",
              "Dallas": "#B72A33",
-             "National": "#FCED1E",
              "Between engagements": "#83ECE7"}
 service_line_dict = {"Data Analysis & Visualization": ["DDI",1],
                 "Data Science": ["DDI",2],
@@ -52,14 +52,14 @@ inter_func_dict = {"People Team":1,
                    "Finance": 5,
                    "Brand/Marketing":6 ,
                    "Service Line Support": 7,
-                   "Industry Vertical Support": 7,
-                   "Practice Director": 8, 
-                   "Practice Manager": 8, 
-                   "Account Director": 9,
-                   "Account Manager": 9,
-                   "Industry Director": 10, 
-                   "Industry Manager": 10, 
-                   "Advocate Director":11}
+                   "Industry Support": 7,
+                   "Practices": 8, 
+                   "Accounts": 9,
+                   "Industries": 10, 
+                   "Delivery":11, 
+                   "Culture": 12}
+
+
 industry_dict = {"Neither": "",
                  "Healthcare & Life Sciences": "2", 
                  "Energy & Utilities": "6",
@@ -86,14 +86,14 @@ class AutoStart(param.Parameterized):
                          "Which one are you?", pn.Row(pn.widgets.RadioButtonGroup.from_param(self.param.selected, button_type="success"), max_width=600, align='center'))
 
 class ConsultantQuestions(AutoStart):
-    client_input = param.Selector(objects=list(role_dict.keys())[:-2]+['Between engagements'])
+    client_input = param.Selector(objects=list(role_dict.keys())[1:])
     practice_input = param.Selector(objects=sorted(list(service_line_dict.keys())))
     industry_input = param.Selector( objects=list(industry_dict.keys())[:3])
     
     def panel(self):
         return pn.Column("My client work is in", pn.Row(pn.widgets.RadioButtonGroup.from_param(self.param.client_input, button_type="success"), max_width=600, align='center'), pn.layout.VSpacer(), \
                          "My primary practice is", pn.Row(pn.widgets.Select.from_param(self.param.practice_input, name=""),max_width=400, align='center'), pn.layout.VSpacer(), \
-                         "If you specialize in one of our industry verticals, which one?", pn.Row(pn.widgets.RadioButtonGroup.from_param(self.param.industry_input, button_type="success"), max_width=400, align='center'))
+                         "Right now, Unify has 2 industry communities of practice. Do you belong to one?", pn.Row(pn.widgets.RadioButtonGroup.from_param(self.param.industry_input, button_type="success"), max_width=400, align='center'))
                          
     
     @param.output('result')
@@ -111,7 +111,7 @@ class ConsultantQuestions(AutoStart):
 
 class InternalQuestions(AutoStart):
     internal_func_input = param.Selector(objects=list(inter_func_dict.keys())[:7])
-    internal_market_input = param.Selector(objects=list(role_dict.keys())[:-1])
+    internal_market_input = param.Selector(objects=["National"] + list(live_dict.keys()))
    
     def panel(self):    
         return pn.Column("As an internal Unifier, which internal function are you part of?", pn.Row(pn.widgets.Select.from_param(self.param.internal_func_input,name=""), max_width=600, align='center'), pn.layout.VSpacer(), \
@@ -131,19 +131,19 @@ class InternalQuestions(AutoStart):
         return internal_dict
 
 class HybridQuestions(AutoStart):
-    client_input = param.Selector(objects=list(role_dict.keys())[:-2]+['Between engagements'])
+    client_input = param.Selector(objects=list(role_dict.keys())[1:])
     practice_input = param.Selector(objects=sorted(list(service_line_dict.keys())))
     industry_input = param.Selector(objects= list(industry_dict.keys())[:3])
     internal_func_input = param.Selector(objects=["None"]+list(inter_func_dict.keys())[:8])
     hybrid_role_input = param.ListSelector(objects=list(inter_func_dict.keys())[8:])
-    internal_market_input = param.Selector(objects=list(role_dict.keys())[:-1])
+    internal_market_input = param.Selector(objects=["National"] + list(live_dict.keys()))
     
     def panel(self): 
         return pn.Column("My client work is in", pn.Row(pn.widgets.RadioButtonGroup.from_param(self.param.client_input, button_type="success"), max_width=600, align='center'), pn.layout.VSpacer(), \
                          "My primary practice is", pn.Row(pn.widgets.Select.from_param(self.param.practice_input, name=""), max_width=600, align='center'), pn.layout.VSpacer(), \
-                         "If you specialize in one of our industry verticals, which one?", pn.Row(pn.widgets.RadioButtonGroup.from_param(self.param.industry_input, button_type="success"), max_width=400, align='center'), pn.layout.Divider(),\
+                         "Right now, Unify has 2 industry communities of practice. Do you belong to one?", pn.Row(pn.widgets.RadioButtonGroup.from_param(self.param.industry_input, button_type="success"), max_width=400, align='center'), pn.layout.Divider(),\
                         "As an internal Unifier, which internal function are you part of?", pn.Row(pn.widgets.Select.from_param(self.param.internal_func_input, name=""), max_width=600, align='center'),
-                        "As a consultant, I am also a ", pn.Row(pn.widgets.CheckButtonGroup.from_param(self.param.hybrid_role_input, button_type="success"),  align='center'),
+                        "As a consultant, I lead and build communities in ", pn.Row(pn.widgets.CheckButtonGroup.from_param(self.param.hybrid_role_input, button_type="success"), max_width=600,  align='center'),
                         "My internal role supports ", pn.Row(pn.widgets.RadioButtonGroup.from_param(self.param.internal_market_input, button_type="success"), max_width=600, align='center'))
     
     @param.output('result')
@@ -214,18 +214,20 @@ class DrawSVG(AutoStart):
         
         #hybrid role glyphs
         if internal_role:
-            fill_op_list = [0.0, 0.0, 0.0, 0.0]
-            if "Practice Director" in internal_role or "Practice Manager" in internal_role:
+            fill_op_list = [0.0, 0.0, 0.0, 0.0, 0.0]
+            if "Practices" in internal_role:
                 fill_op_list[0] = 1.0
-            if "Account Director" in internal_role or "Account Manager" in internal_role:
+            if "Accounts" in internal_role:
                 fill_op_list[1] = 1.0 
-            if "Industry Director" in internal_role or "Industry Manager" in internal_role:
+            if "Industries" in internal_role:
                 fill_op_list[2] = 1.0 
-            if "Advocate Director" in internal_role:
+            if "Delivery" in internal_role:
                 fill_op_list[3] = 1.0 
+            if "Culture" in internal_role:
+                fill_op_list[4] = 1.0
 
-            for i in range(4):
-                dwg.add(dwg.circle(center=(162.5+(i*25) ,150), r=10, style="fill:#143250; fill-opacity:"+str(fill_op_list[i])+";stroke:#143250;stroke-width:2"))
+            for i in range(5):
+                dwg.add(dwg.circle(center=(150+(i*25) ,150), r=10, style="fill:#143250; fill-opacity:"+str(fill_op_list[i])+";stroke:#143250;stroke-width:2"))
 
         if industry!="Neither" :
             dwg.add(dwg.line(start=(100,170), end=(300, 170), style="stroke:#143250;stroke-width:2;stroke-dasharray:"+str(industry_dict[industry])))
